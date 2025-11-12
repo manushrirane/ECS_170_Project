@@ -4,18 +4,17 @@ import time
 import torch
 from transformers import AutoModelForSequenceClassification, TrainingArguments, Trainer
 from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
-from utils import load_imdb, dataset_to_dataloader, compute_metrics, start_nvml_logger, save_results
+from utils import load_kaggle_imdb, dataset_to_dataloader, compute_metrics, start_nvml_logger, save_results
 import numpy as np
 from tqdm import tqdm
 
 def train_lora(model_name='bert-base-uncased', batch_size=16, epochs=3, lr=2e-5, output_dir='lora_output', device='cuda'):
     # load dataset and tokenizer (IMDB)
-    tokenized, tokenizer = load_imdb(tokenizer_name=model_name, max_length=256)
+    tokenized, tokenizer = load_kaggle_imdb(csv_path='imdb_dataset.csv', tokenizer_name=model_name, max_length=256)
     num_labels = 2
 
     model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
-    print(f"Using device: {device}")
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
     model.to(device)
 
     # Configure LoRA on the model

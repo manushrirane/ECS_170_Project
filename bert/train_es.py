@@ -6,7 +6,7 @@ import copy
 import numpy as np
 from transformers import AutoModelForSequenceClassification
 from peft import LoraConfig, get_peft_model, TaskType
-from utils import load_imdb, dataset_to_dataloader, compute_metrics, start_nvml_logger, save_results
+from utils import load_kaggle_imdb, dataset_to_dataloader, compute_metrics, start_nvml_logger, save_results
 from tqdm import tqdm
 
 def get_adapter_params(model):
@@ -51,14 +51,15 @@ def eval_fitness(model, val_loader, device='cuda'):
     return metrics, metrics.get('auroc', 0.0) + metrics.get('f1', 0.0)
 
 def train_es(model_name='bert-base-uncased', batch_size=16, generations=100, pop_size=30, sigma=0.02, alpha=0.1, epochs=1, output_dir='es_output'):
-    tokenized, tokenizer = load_imdb(tokenizer_name=model_name, max_length=256)
+    tokenized, tokenizer = load_kaggle_imdb(csv_path='imdb_dataset.csv', tokenizer_name=model_name, max_length=256)
     train_loader = dataset_to_dataloader(tokenized, 'train', batch_size=batch_size, shuffle=True)
     val_loader = dataset_to_dataloader(tokenized, 'test', batch_size=batch_size, shuffle=False)
 
     model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
-    print(f"Using device: {device}")
-    model.to('cuda')
+    #device = "mps" if torch.backends.mps.is_available() else "cpu"
+    #print(f"Using device: {device}")
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+    model.to(device)
 
     # attach LoRA adapter and keep its params as the ones we will optimize via ES
     peft_config = LoraConfig(task_type=TaskType.SEQ_CLS, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1, target_modules=["query", "value"])
