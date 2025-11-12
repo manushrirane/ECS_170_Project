@@ -1,4 +1,5 @@
 #!/bin/bash
+export TOKENIZERS_PARALLELISM=false
 export MODEL=bert-base-uncased
 
 # LoRA quick smoke

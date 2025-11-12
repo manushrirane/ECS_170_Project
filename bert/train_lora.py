@@ -14,6 +14,8 @@ def train_lora(model_name='bert-base-uncased', batch_size=16, epochs=3, lr=2e-5,
     num_labels = 2
 
     model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    print(f"Using device: {device}")
     model.to(device)
 
     # Configure LoRA on the model

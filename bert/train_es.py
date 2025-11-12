@@ -56,6 +56,8 @@ def train_es(model_name='bert-base-uncased', batch_size=16, generations=100, pop
     val_loader = dataset_to_dataloader(tokenized, 'test', batch_size=batch_size, shuffle=False)
 
     model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    print(f"Using device: {device}")
     model.to('cuda')
 
     # attach LoRA adapter and keep its params as the ones we will optimize via ES
